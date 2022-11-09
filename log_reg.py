@@ -20,8 +20,7 @@ def run_one_LR(X_train, Y_train, X_test, Y_test, prepro_param, rand_seed=None
                , verbose=1, n_jobs=4, run_count=1, load_existing_model=0):
 
     if load_existing_model:
-        folder = "C:\\Users\\estel\\OneDrive - Stanford\\Documents\\00_Stanford\\EE292D\\Project\\CS539_Fall_Prediction\\"
-        filename = folder + "lr_pre_" + prepro_param + "solver_" + str(solver) + "iter_" \
+        filename = "lr_pre_" + prepro_param + "solver_" + str(solver) + "iter_" \
                    + str(max_iter) + "run_" + str(run_count) + ".pkl"
         loaded_model = joblib.load(filename)
         Y_predict = loaded_model.predict(X_test)

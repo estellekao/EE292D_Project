@@ -1,4 +1,11 @@
-﻿# CS539 
+# Notes from Estelle
+| Steps       | Script        | Description | Input     | Output
+| :---        |    :----:     |    :----:   |          ---: |          ---: |
+| Step#1      | preprocess.py | <ul>  <li>Process <MobiAct_Dataset_v2.0> Annotated data into .json fomat. </li>  <li>Estelle's modification: The accelerator and gyroscpe data is originally recorded in floating point and is casted to int after running this script</li> </ul>       |  <ul>  <li>ss: slice_size in nanoseconds. Determines the time stamp spacing to get new data </li>  <li>mobiact_folder: where your MobiAct dataset is stored</li> </ul>  | <ul><li>  preprocessed_*.json: preprocessed data (int casted)</li></ul>  |
+| Step#2      | log_reg.py    |  <ul><li>Trains the model in K=10 fold. Binary Classification. </li><li>Estelle's modification: Script was modified to allow new model training vs. loading a pre-trained model </li> </ul> | <ul>  <li>ss: filese: which preprocessed.json file to train and predict </li>  <li>load_existing_model: <ul><li>set to 1 if you had previously trained a model and what to use that, e.g. lr_pre_6.0E+09solver_lbfgsiter_1000run_1.pkl </li><li>set to 0 if you wish to retrain the model or that no model exist yet </li></ul></li> </ul> |<ul><li> lr_pre_*.pkl: model </li><li>bin_results_summary.json: model accuracy, F1score, precision, .... </li></ul> |
+
+﻿# Notes from original repo below: https://github.com/ttshiz/CS539_Fall_Prediction
+
 # Efficient Early Fall Detection Technique
 
 ## Introduction and Rationale
@@ -16,7 +23,7 @@ The dataset we used in this project can be found at:
 https://bmi.teicrete.gr/en/the-mobifall-and-mobiact-datasets-2/
 
 #### Example Data Instance
-An example reading from the time series data from one data collection trial from the MobiAct dataset is as follows: 
+An example reading from the time series data from one data collection trial from the MobiAct dataset is as follows:
 1913880219000, 0.90021986, -9.557653, -1.4939818
 1914086499000, 0.7565677, -9.5385, -1.13964
 1914287283000, 1.0151415, -9.490616, -1.292869
@@ -29,7 +36,7 @@ Our goals for preprocessing were two fold.  First to only use light/easy to comp
 There were several factors considered in algorithm selection. Given the sizes of the available datasets overfitting is a major concern.  Furthermore, since there are various smartphones on the market and for the longevity of the usefulness of the tool, the techniques used will need to be tolerant to this variability.  Some of the top candidates for the main algorithm were Decision Trees (DTs), Recurrent Neural Networks (RNNs), Support Vector Machines (SVMs), and Hidden Markov Models (HMMs).  RNNs are considered due to their ability to perform reasonably on temporal data approach. Similarly since, some of the previous work on fall detection has found some success with SVMs and HMMs they may also be a good candidate for prediction.  Finally we considered Decision Trees since they were a nice easily computable model and we wanted to determine even they could perform well.  All of these techniques had the potential for better results than basic statistical thresholding, since they may reduce false positives.
 #### Implementation
 In the end, we performed the majority of our study using Decision Trees and Logistic Regression.  We favored these methods due to the quality of the available libraries, given we were focusing on preprocessing techniques.  We also started implementing our own Hidden Markov Model for Gaussian Classification, using some of the framework for the (now unsupported) hmmlearn library but this did not achieve production quality before the deadline.
-We used multi-class classification with a post-processing filter into the binary classification, to attempt to minimize the number of false positives in the end results. 
+We used multi-class classification with a post-processing filter into the binary classification, to attempt to minimize the number of false positives in the end results.
 ### Metrics
 To evaluate the tool, accuracy and F1 Scoring were the primary metrics calculated, with others calculated so verify conclusions.  These metrics were calculated for each run in k-fold cross-validation, with k=10.
 ## Results and Discussion
