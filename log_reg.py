@@ -7,6 +7,7 @@ import joblib
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
 from sklearn.metrics import f1_score, precision_score, recall_score, classification_report
 from sklearn.linear_model import LogisticRegression
+from sklearn.neural_network import MLPClassifier
 
 setup = util.setup
 calc_metrics = util.calc_metrics
@@ -28,9 +29,11 @@ def run_one_LR(X_train, Y_train, X_test, Y_test, prepro_param, rand_seed=None
         return Y_predict
         
     else:
-        model = LogisticRegression(random_state=rand_seed, solver=solver, max_iter=max_iter
-                                   , multi_class=multi_class, n_jobs=n_jobs)
-        model.fit(X_train, Y_train)
+        model = MLPClassifier(random_state=1, max_iter=300).fit(X_train, Y_train)
+        
+        #model = LogisticRegression(random_state=rand_seed, solver=solver, max_iter=max_iter
+        #                           , multi_class=multi_class, n_jobs=n_jobs)
+        #model.fit(X_train, Y_train)
         Y_predict = model.predict(X_test)
         print(len(X_train), len(Y_train))
         print(len(X_test), len(Y_test))   
