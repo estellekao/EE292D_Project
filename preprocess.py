@@ -24,33 +24,33 @@ def process_slice(slice):
     def slice_get(name):
         return [float(v[name]) for v in slice]
     slice_features = dict()
-    slice_features["x_min"] = np.amin(slice_get("acc_x"))
-    slice_features["y_min"] = np.amin(slice_get("acc_y"))
-    slice_features["z_min"] = np.amin(slice_get("acc_z"))
+    slice_features["x_min"] = int(np.amin(slice_get("acc_x")))
+    slice_features["y_min"] = int(np.amin(slice_get("acc_y")))
+    slice_features["z_min"] = int(np.amin(slice_get("acc_z")))
     
-    slice_features["x_max"] = np.amax(slice_get("acc_x"))
-    slice_features["y_max"] = np.amax(slice_get("acc_y"))
-    slice_features["z_max"] = np.amax(slice_get("acc_z"))
+    slice_features["x_max"] = int(np.amax(slice_get("acc_x")))
+    slice_features["y_max"] = int(np.amax(slice_get("acc_y")))
+    slice_features["z_max"] = int(np.amax(slice_get("acc_z")))
     
-    slice_features["x_std"] = np.std(slice_get("acc_x"))
-    slice_features["y_std"] = np.std(slice_get("acc_y"))
-    slice_features["z_std"] = np.std(slice_get("acc_z"))
+    slice_features["x_std"] = int(np.std(slice_get("acc_x")))
+    slice_features["y_std"] = int(np.std(slice_get("acc_y")))
+    slice_features["z_std"] = int(np.std(slice_get("acc_z")))
     
-    slice_features["x_mean"] = np.mean(slice_get("acc_x"))
-    slice_features["y_mean"] = np.mean(slice_get("acc_y"))
-    slice_features["z_mean"] = np.mean(slice_get("acc_z"))
+    slice_features["x_mean"] = int(np.mean(slice_get("acc_x")))
+    slice_features["y_mean"] = int(np.mean(slice_get("acc_y")))
+    slice_features["z_mean"] = int(np.mean(slice_get("acc_z")))
 
-    slice_features["x_slope"] = np.mean(np.diff(slice_get("acc_x")))
-    slice_features["y_slope"] = np.mean(np.diff(slice_get("acc_y")))
-    slice_features["z_slope"] = np.mean(np.diff(slice_get("acc_z")))
+    slice_features["x_slope"] = int(np.mean(np.diff(slice_get("acc_x"))))
+    slice_features["y_slope"] = int(np.mean(np.diff(slice_get("acc_y"))))
+    slice_features["z_slope"] = int(np.mean(np.diff(slice_get("acc_z"))))
 
-    slice_features["x_zc"] = zero_crossings(slice_get("acc_x"))
-    slice_features["y_zc"] = zero_crossings(slice_get("acc_y"))
-    slice_features["z_zc"] = zero_crossings(slice_get("acc_z"))
+    slice_features["x_zc"] = int(zero_crossings(slice_get("acc_x")))
+    slice_features["y_zc"] = int(zero_crossings(slice_get("acc_y")))
+    slice_features["z_zc"] = int(zero_crossings(slice_get("acc_z")))
 
-    slice_features["x_mmd"] = min_max_distance(slice_get("acc_x"))
-    slice_features["y_mmd"] = min_max_distance(slice_get("acc_y"))
-    slice_features["z_mmd"] = min_max_distance(slice_get("acc_z"))
+    slice_features["x_mmd"] = int(min_max_distance(slice_get("acc_x")))
+    slice_features["y_mmd"] = int(min_max_distance(slice_get("acc_y")))
+    slice_features["z_mmd"] = int(min_max_distance(slice_get("acc_z")))
 
     # label each timeslice with the label of the majority class unless it is a fall
     falls = FALL_LABELS.intersection(set([v["label"] for v in slice]))
@@ -95,9 +95,10 @@ def process_file(file_name, slice_size):
         return False
 
 # Preprocesses the dataset directory for a given slice_size (nanoseconds)
-def process_directory(slice_size):
+def process_directory(slice_size, mobiact_folder):
     data = dict(slice_size=slice_size)
-    for file in glob.glob("MobiAct_Dataset_v2.0/**/*_annotated.csv", recursive=True):
+    print(data)
+    for file in glob.glob(mobiact_folder + "*\\*_annotated.csv", recursive=True):
         data[file] = process_file(file, slice_size)
     return data
 
@@ -107,13 +108,15 @@ def write_to_json(data):
 
 
 # main function to enable running in terminal
-def main(slice_size):
+def main(slice_size, mobiact_folder):
     
     print("Processing Directory")
-    data = process_directory(slice_size)
+    data = process_directory(slice_size, mobiact_folder)
+    print(data)
     print("Writing File")
     write_to_json(data)
 
 if __name__ == "__main__":
-    ss = sys.argv[1];
-    main(ss)
+    ss =  6e9 #5.0e9 #2.5e9 #1e9 #sys.argv[1]; # Preprocesses the dataset directory for a given slice_size (nanoseconds)
+    mobiact_folder = "C:\\Users\\estel\\OneDrive - Stanford\\Documents\\00_Stanford\\EE292D\\Project\\MobiAct_Dataset_v2.0\\\Annotated Data\\"
+    main(ss, mobiact_folder)

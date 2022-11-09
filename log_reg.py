@@ -2,9 +2,10 @@ import load_data
 import preprocess
 import util
 import json
-from sklearn.externals import joblib
+#from sklearn.externals import joblib
+import joblib
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
-from sklearn.metrics import f1_score, precision_score, recall_score
+from sklearn.metrics import f1_score, precision_score, recall_score, classification_report
 from sklearn.linear_model import LogisticRegression
 
 setup = util.setup
@@ -15,20 +16,33 @@ calc_cross_val_aggregates = util.calc_cross_val_aggregates
 # Trains logistic regression on X_train and Y_train sets, predicts labels on X_test
 # and Y_test sets, dumps model to file and returns predicted labels
 def run_one_LR(X_train, Y_train, X_test, Y_test, prepro_param, rand_seed=None
-               , solver='lbfgs', max_iter=1000, multi_class='multinomial'
-               , verbose=1, n_jobs=4, run_count=1):
-    model = LogisticRegression(random_state=rand_seed, solver=solver, max_iter=max_iter
-                               , multi_class=multi_class, n_jobs=n_jobs)
-    model.fit(X_train, Y_train)
-    Y_predict = model.predict(X_test)
+               , solver='lbfgs', max_iter=1000, multi_class='ovr'
+               , verbose=1, n_jobs=4, run_count=1, load_existing_model=0):
 
-    print("Running cross val "+str(run_count)+"....")
-    # uncomment to save model
-    #filename = "lr_pre_" + prepro_param + "solver_" + str(solver) + "iter_"
-    #filename = filename + str(max_iter) + "run_" + str(run_count) + ".pkl"
-    #joblib.dump(model, filename)
-    #print(Y_predict)
-    return Y_predict
+    if load_existing_model:
+        folder = "C:\\Users\\estel\\OneDrive - Stanford\\Documents\\00_Stanford\\EE292D\\Project\\CS539_Fall_Prediction\\"
+        filename = folder + "lr_pre_" + prepro_param + "solver_" + str(solver) + "iter_" \
+                   + str(max_iter) + "run_" + str(run_count) + ".pkl"
+        loaded_model = joblib.load(filename)
+        Y_predict = loaded_model.predict(X_test)
+        print(loaded_model)
+        return Y_predict
+        
+    else:
+        model = LogisticRegression(random_state=rand_seed, solver=solver, max_iter=max_iter
+                                   , multi_class=multi_class, n_jobs=n_jobs)
+        model.fit(X_train, Y_train)
+        Y_predict = model.predict(X_test)
+        print(len(X_train), len(Y_train))
+        print(len(X_test), len(Y_test))   
+        
+        print("Running cross val "+str(run_count)+"....")
+        # uncomment to save model
+        filename = "lr_pre_" + prepro_param + "solver_" + str(solver) + "iter_"
+        filename = filename + str(max_iter) + "run_" + str(run_count) + ".pkl"
+        joblib.dump(model, filename)
+        
+        return Y_predict
 
 # does conversion from multi-class labels to to binary
 def to_binary(Y_list):
@@ -37,7 +51,7 @@ def to_binary(Y_list):
 # Runs k-fold Cross Validation on preprocessed data found in the preprocessed file
 # pointed to by filename with num_slices the number of preprocessed slices to include
 # in each sample (uniform length in time)
-def do_cross_validation(filename, num_slices, k):
+def do_cross_validation(filename, num_slices, k, load_existing_model):
     print("Cross Validating: "+filename)
     data_gen = setup(filename, num_slices, k)
     scores = dict()
@@ -55,7 +69,7 @@ def do_cross_validation(filename, num_slices, k):
     for ((X_train, Y_train), (X_test, Y_test)) in data_gen:
         prepro_param = filename[13:-5]
         Y_predicted = run_one_LR(X_train, Y_train, X_test, Y_train, prepro_param
-                                 , run_count=run_num)
+                                 , run_count=run_num, load_existing_model=load_existing_model)
         #a, f, p, r, f_w, p_w, r_w, f_m, p_m, r_m = calc_metrics(Y_test, Y_predicted) # binary version
         a, f, p, r, f_w, p_w, r_w, f_m, p_m, r_m = calc_metrics(Y_test, Y_predicted) # multi-class version
         accuracies.append(a)
@@ -70,10 +84,10 @@ def do_cross_validation(filename, num_slices, k):
         recalls_micro.append(r_m)
         run_num = run_num +1
         # uncomment the print for verbose
-        #print("accuracy: "+str(a)+" f1score: "+str(f)+" precision: "+str(p)+" recall: "
-        #      +str(r)+" f1score weighted: "+str(f_w)+" precision weighted: "+str(p_w)
-        #      +" recall weighted: "+str(r_w)+" f1score micro: "+str(f_m)
-        #      +" precision micro: "+str(p_m)+" recall micro: "+str(r_m))
+        print("accuracy: "+str(a)+" f1score: "+str(f)+" precision: "+str(p)+" recall: "
+              +str(r)+" f1score weighted: "+str(f_w)+" precision weighted: "+str(p_w)
+              +" recall weighted: "+str(r_w)+" f1score micro: "+str(f_m)
+              +" precision micro: "+str(p_m)+" recall micro: "+str(r_m))
         #break # comment out for full run, only here for testing
     scores["accuracies"] = accuracies
     scores["f1s"] = f1s
@@ -123,8 +137,9 @@ def print_by_cross_val_run(file_dict):
 
 # runs cross validation on the preprocessed data files    
 def main():
-    files = ["preprocessed_6.0E+09.json", "preprocessed_5.0E+09.json"
-             , "preprocessed_2.5E+09.json",  "preprocessed_1.0E+09.json"]
+    files = ["preprocessed_6.0E+09.json"]#["preprocessed_5.0E+09.json" , "preprocessed_2.5E+09.json",  "preprocessed_1.0E+09.json"] 
+    load_existing_model = 0  # use 1 to load existing model. use 0 to train and save new model. 
+     
   
     # time_slice(nanoseconds) * number_of_slices <= 6 seconds
     num_slices = dict()
@@ -148,10 +163,10 @@ def main():
         if filename in all_file_dict:
             continue
         file_dict = dict()
-        try:
+        if 1:#try:
             # do each pair
             for num_s in num_slices[filename]:
-                s = do_cross_validation(filename, num_s, k)
+                s = do_cross_validation(filename, num_s, k, load_existing_model)
                 #print("scores "+str(s)) #enable for very verbose
                 with open("metrics_slice_num_"+str(num_s)+"_"+filename, "w") as fp:
                     json.dump(s, fp)
@@ -162,7 +177,7 @@ def main():
                 #print_by_cross_val_run(file_dict) #enable for verbose
                 #break; # uncomment out to do one file
                 all_file_dict[filename+str(num_s)] = file_dict
-        except ValueError:
+        if 0: #except ValueError:
             print("Error on file"+filename)
             continue
             #break; # uncomment out to do one file
