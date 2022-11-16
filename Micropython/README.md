@@ -7,7 +7,7 @@
 5. Optional: Skim I2C documentation for Micropython. https://docs.micropython.org/en/latest/library/machine.I2C.html
 6. In Thonny, select Micropython (Raspberry Pi Pico) in the bottom left. <img width="1433" alt="image" src="https://user-images.githubusercontent.com/54165966/202307653-5ff72d10-8e9e-4ddf-aca6-2aa2b5859eb6.png">
 8. In Thonny, select file "new" and copy and paste the contents of main.py and data.csv. Thonny has encoding "features" that make direct loading difficult so please do this more cumbersome method instead <img width="1433" alt="image" src="https://user-images.githubusercontent.com/54165966/202307840-75c85211-aaac-4211-8070-0475d792d4f0.png">
-9. Wire up components. Please use these breadboard pictures for reference. You may change the pin numbers but the code will have to updated
+9. Wire up components. Please use these breadboard pictures for reference. You may change the pin numbers but the code will have to updated. Note: The resistor is a 27 ohm resistor but any reistor in the range of 20-300 ohms should suffice.
 ![image](https://user-images.githubusercontent.com/54165966/202309305-f7aee928-1f49-4073-b093-266fa2b4da4e.png)
 ![image](https://user-images.githubusercontent.com/54165966/202309397-973adee7-10da-4a1a-9f32-9af1ae29674f.png)
 ![image](https://user-images.githubusercontent.com/54165966/202309446-9629e6f1-eeba-40de-90a9-f879f50e5940.png)
