@@ -5,9 +5,18 @@
 3. Install Thonny IDE.  https://thonny.org/ . It is a bit clunky, and hard to add new files to, but has nice serial communication with Pico
 4. Optional: Skim this reference https://hackspace.raspberrypi.com/books/micropython-pico. In particular look at the Pinout, the LED, ad pushbutton sections
 5. Optional: Skim I2C documentation for Micropython. https://docs.micropython.org/en/latest/library/machine.I2C.html
-6. Wire up components. Please use this breadboard picture for reference. You may change the pin numbers but the code will have to updated
-7. Press the Green "play" button in Thonny. You should see data printed to the Thonny console
-8. Move accelerometer around and try to get LED to light up. Press the button and see if re-training is initiated.
+6. In Thonny, select Micropython (Raspberry Pi Pico) in the bottom left. <img width="1433" alt="image" src="https://user-images.githubusercontent.com/54165966/202307653-5ff72d10-8e9e-4ddf-aca6-2aa2b5859eb6.png">
+8. In Thonny, select file "new" and copy and paste the contents of main.py and data.csv. Thonny has encoding "features" that make direct loading difficult so please do this more cumbersome method instead <img width="1433" alt="image" src="https://user-images.githubusercontent.com/54165966/202307840-75c85211-aaac-4211-8070-0475d792d4f0.png">
+9. Wire up components. Please use these breadboard pictures for reference. You may change the pin numbers but the code will have to updated
+![image](https://user-images.githubusercontent.com/54165966/202309305-f7aee928-1f49-4073-b093-266fa2b4da4e.png)
+![image](https://user-images.githubusercontent.com/54165966/202309397-973adee7-10da-4a1a-9f32-9af1ae29674f.png)
+![image](https://user-images.githubusercontent.com/54165966/202309446-9629e6f1-eeba-40de-90a9-f879f50e5940.png)
+
+
+10. Press the Green "play" button in Thonny. You should see data printed to the Thonny console
+![image](https://user-images.githubusercontent.com/54165966/202308230-dcc73c5f-114b-4deb-a246-9921103f1f72.png)
+
+11. Move accelerometer around and try to get LED to light up. Press the button and see if re-training is initiated.
 
 
 ## Troubleshooting
