@@ -1,0 +1,24 @@
+# How to get Raspberry Pi Pico Adaptive Fall Detection Running
+
+1. Plug Raspberry Pi Pico into computer
+2. Install Micropython UF2 File onto device. See instructions here for more concrete details: https://www.raspberrypi.com/documentation/microcontrollers/micropython.html
+3. Install Thonny IDE.  https://thonny.org/ . It is a bit clunky, and hard to add new files to, but has nice serial communication with Pico
+4. Optional: Skim this reference https://hackspace.raspberrypi.com/books/micropython-pico. In particular look at the Pinout, the LED, ad pushbutton sections
+5. Optional: Skim I2C documentation for Micropython. https://docs.micropython.org/en/latest/library/machine.I2C.html
+6. Wire up components. Please use this breadboard picture for reference. You may change the pin numbers but the code will have to updated
+7. Press the Green "play" button in Thonny. You should see data printed to the Thonny console
+8. Move accelerometer around and try to get LED to light up. Press the button and see if re-training is initiated.
+
+
+## Troubleshooting
+
+### I2C address problems
+
+1. Check the Address jumpers on the LSM 330 accelerometer.
+2. Checkout out the I2C documentation and do an i2c.scan() to see the addresses of the devices.
+
+### Memory Allocation problems
+1. Reduces the number of lines in the CSV and otherwise remove items we dont need to hold in memory
+2. Open issue: We don't have much memory :(
+
+
