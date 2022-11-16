@@ -18,7 +18,8 @@
 
 11. Move accelerometer around and try to get LED to light up. Press the button and see if re-training is initiated. You should see retraining information print to console.
 
-![image](https://user-images.githubusercontent.com/54165966/202310423-ad6e00fc-8c6f-42b3-9cbb-43da0ffecfb1.png)
+**![image](https://user-images.githubusercontent.com/54165966/202310765-e278b132-2450-464c-88ab-6e156b821b51.png)
+**
 
 Retraining stuff you should see:
 <img width="1433" alt="image" src="https://user-images.githubusercontent.com/54165966/202310544-36163ae0-2746-4ad6-acb4-c32d0595d57f.png">
