@@ -21,7 +21,7 @@ def run_one_LR(X_train, Y_train, X_test, Y_test, prepro_param, rand_seed=None
                , verbose=1, n_jobs=4, run_count=1, load_existing_model=0):
 
     if load_existing_model:
-        filename = "lr_pre_" + prepro_param + "solver_" + str(solver) + "iter_" \
+        filename = "pkl_model/lr_pre_" + prepro_param + "solver_" + str(solver) + "iter_" \
                    + str(max_iter) + "run_" + str(run_count) + ".pkl"
         loaded_model = joblib.load(filename)
         Y_predict = loaded_model.predict(X_test)
@@ -40,7 +40,7 @@ def run_one_LR(X_train, Y_train, X_test, Y_test, prepro_param, rand_seed=None
         
         print("Running cross val "+str(run_count)+"....")
         # uncomment to save model
-        filename = "lr_pre_" + prepro_param + "solver_" + str(solver) + "iter_"
+        filename = "pkl_model/lr_pre_" + prepro_param + "solver_" + str(solver) + "iter_"
         filename = filename + str(max_iter) + "run_" + str(run_count) + ".pkl"
         joblib.dump(model, filename)
         
@@ -140,7 +140,7 @@ def print_by_cross_val_run(file_dict):
 # runs cross validation on the preprocessed data files    
 def main():
     files = ["preprocessed_6.0E+09.json"]#["preprocessed_5.0E+09.json" , "preprocessed_2.5E+09.json",  "preprocessed_1.0E+09.json"] 
-    load_existing_model = 0  # use 1 to load existing model. use 0 to train and save new model. 
+    load_existing_model = 1  # use 1 to load existing model. use 0 to train and save new model. 
      
   
     # time_slice(nanoseconds) * number_of_slices <= 6 seconds
