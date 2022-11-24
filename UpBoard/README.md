@@ -1,5 +1,6 @@
 # Notes from Estelle
 
+Testing I2C connection [UpBoard/LSM.py].
 '''
 ubuntu@ubuntu-UP-CHT01:~$ i2cdetect -y -r 1
      0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f
@@ -21,4 +22,40 @@ Acceleration in X-Axis : 0.190814
 Acceleration in Y-Axis : 0.372057
 Acceleration in Z-Axis : 10.028797
 
+'''
+
+
+Testing dependencies in loading .pkl model [log_reg.py].
+'''
+ubuntu@ubuntu-UP-CHT01:~/Documents/EE292D_Project$ sudo apt-get install python3-numpy
+
+ubuntu@ubuntu-UP-CHT01:~/Documents/EE292D_Project$ sudo apt-get install python3-sklearn
+
+ubuntu@ubuntu-UP-CHT01:~/Documents/EE292D_Project$ python3 log_reg.py 
+'''
+
+
+
+Setting up SSH
+
+'''
+On the Upboard:
+ubuntu@ubuntu-UP-CHT01:~/Documents/EE292D_Project/UpBoard$ sudo apt -y install openssh-server
+'''
+
+In file /etc/ssh/sshd_config
+'''
+# Change to no to disable tunnelled clear text passwords
+PasswordAuthentication no
+'''
+
+Then in the terminal, run
+'''
+service ssh restart
+'''
+
+Main Script for fall detection [fall_prediction.py]
+'''
+ubuntu@ubuntu-up-cht01:~/Documents/EE292D_Project/UpBoard$ python3 fall_prediction.py
+['SIT']
 '''
