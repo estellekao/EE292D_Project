@@ -140,7 +140,7 @@ def print_by_cross_val_run(file_dict):
 # runs cross validation on the preprocessed data files    
 def main():
     files = ["preprocessed_6.0E+09.json"]#["preprocessed_5.0E+09.json" , "preprocessed_2.5E+09.json",  "preprocessed_1.0E+09.json"] 
-    load_existing_model = 1  # use 1 to load existing model. use 0 to train and save new model. 
+    load_existing_model = 0 # use 1 to load existing model. use 0 to train and save new model. 
      
   
     # time_slice(nanoseconds) * number_of_slices <= 6 seconds

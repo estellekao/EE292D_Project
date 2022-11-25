@@ -8,6 +8,8 @@ import smbus
 import time
 import numpy as np
 import joblib
+from sklearn.neural_network import MLPClassifier
+
 
 def get_acc_data():
     # Get I2C bus
@@ -58,15 +60,20 @@ def get_acc_data():
     #print ("Acceleration in Y-Axis : %f" % (yAccl*2*9.8/32767))
     #print ("Acceleration in Z-Axis : %f" % (zAccl*2*9.8/32767))
 
-    # TO-DO: returning the integer representation here. 
-    # TO-DO: retrain .pkl model with int. Step1: scale the input by *32767/(2*9.8) from the MobileFall Dataset.
+    # DONE: returning the integer representation here. 
+    # DONE: retrain .pkl model with int. Step1: scale the input by *32767/(2*9.8) from the MobileFall Dataset.
+
+    #This is for human reading [m/s^2]
+    #xAccl = xAccl *2*9.8/32767
+    #yAccl = yAccl *2*9.8/32767
+    #zAccl = zAccl *2*9.8/32767
     return xAccl, yAccl, zAccl
 
-def get_mult_acc_data(wait_time = 0.5):
+def get_mult_acc_data(time_interval = 6, data_spacing = 0.005):
     x_acc = []
     y_acc = []
     z_acc = []
-    for i in range(0,12):
+    for i in range(0,int(time_interval/data_spacing)):
         # repeadly get accelerometer data
         xAccl, yAccl, zAccl = get_acc_data()
         x_acc.append(xAccl)
@@ -74,7 +81,7 @@ def get_mult_acc_data(wait_time = 0.5):
         z_acc.append(zAccl)
         
         # sleep
-        time.sleep(wait_time)
+        time.sleep(data_spacing)
     return x_acc, y_acc, z_acc
 
 
@@ -117,39 +124,65 @@ def preprocess_acc_data(acc_x, acc_y, acc_z):
     y_mmd = min_max_distance(acc_y)
     z_mmd = min_max_distance(acc_z)
 
+    print("z_slope: ", z_slope)
     return [x_min, y_min, z_min, x_max, y_max, z_max, x_std, y_std, z_std, x_mean, y_mean, z_mean, x_slope, y_slope, z_slope, x_zc, y_zc, z_zc, x_mmd, y_mmd, z_mmd]
 
 # Trains logistic regression on X_train and Y_train sets, predicts labels on X_test
 # and Y_test sets, dumps model to file and returns predicted labels
-def run_one_LR(X_test, rand_seed=None
-               , solver='lbfgs', max_iter=1000, multi_class='ovr'
-               , verbose=1, n_jobs=4, run_count=1, load_existing_model=1):
+def predict_fall(X_test):
 
     # TO-DO: existing model path is hard-coded at the moment. Make it a an argument.
     # TO-DO: No functionality of on-device training yet. Use Warm Start.
-    if load_existing_model:
-        filename = "../pkl_model/lr_pre_6.0E+09solver_lbfgsiter_1000run_1.pkl"
-                   #"pkl_model/lr_pre_" + prepro_param + "solver_" + str(solver) + "iter_" \
-                   #+ str(max_iter) + "run_" + str(run_count) + ".pkl"
-        loaded_model = joblib.load(filename)
-        Y_predict = loaded_model.predict(X_test)
-        print(Y_predict)
-        print(loaded_model)
-        return Y_predict
+    filename = "../pkl_model/lr_pre_6.0E+09solver_lbfgsiter_1000run_retrain.pkl"
+               #"pkl_model/lr_pre_" + prepro_param + "solver_" + str(solver) + "iter_" \
+               #+ str(max_iter) + "run_" + str(run_count) + ".pkl"
+    loaded_model = joblib.load(filename)
+    Y_predict = loaded_model.predict(X_test)
+    print(Y_predict)
+    #print(loaded_model)
+    return Y_predict
+
+
+def train_fall_detection_model(X_train, Y_train):
+    model = MLPClassifier(random_state=1, max_iter=300, warm_start=True).fit(X_train, Y_train)
+
+    # uncomment to save model
+    filename = "../pkl_model/lr_pre_6.0E+09solver_lbfgsiter_1000run_retrain.pkl" 
+    joblib.dump(model, filename)
+    return 
 
 if __name__ == "__main__":
 
-    # repeatedly get accelerometer data. wait time.
-    x_acc, y_acc, z_acc = get_mult_acc_data(wait_time = 0.5)
-    #print(x_acc, y_acc, z_acc)
+    new_X = []
+    new_Y = []
+    while True:
+        # repeatedly get accelerometer data. wait time.
+        x_acc, y_acc, z_acc = get_mult_acc_data(time_interval = 3, data_spacing = 0.001)
+        #print(x_acc, y_acc, z_acc)
 
-    # preprocess the accelerometer data, and store into list format.
-    # run_one_LR expects 2D-array. Adding another outer [] to make the 1D-array two dimensional.
-    X_test = [preprocess_acc_data(x_acc, y_acc, z_acc)]
-    #print(X_train)
-    #print("len of X_train list: %s" % len(X_train))
+        # preprocess the accelerometer data, and store into list format.
+        # run_one_LR expects 2D-array. Adding another outer [] to make the 1D-array two dimensional.
+        X_test = [preprocess_acc_data(x_acc, y_acc, z_acc)]
+        #print(X_test)
+        #print("len of X_train list: %s" % len(X_train))
 
-    # get prediction
-    run_one_LR(X_test, rand_seed=None
-               , solver='lbfgs', max_iter=1000, multi_class='ovr'
-               , verbose=1, n_jobs=4, run_count=1, load_existing_model=1)
+        # get prediction
+        Y_predict = predict_fall(X_test)
+        new_X.append(X_test)
+
+        # update model
+        # use Y_train=1 for fall, Y_train=0 for no fall. 
+        if Y_predict:
+            val = input("Was that a fall? (1=Yes, 0=No)")
+            print(val)
+            new_Y.append(Y_predict)
+
+            # train model and clear cache.
+            # TO-DO: this is not good.... this is retrainig the entire model with only limited dataset from new_X and new_Y.
+            #uncommenting out for now.
+            #train_fall_detection_model(X_train=X_test, Y_train=['1'])
+            new_X = []
+            new_Y = []
+        else:
+            new_Y.append(Y_predict)
+
