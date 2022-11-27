@@ -69,13 +69,19 @@ def get_acc_data():
     #zAccl = zAccl *2*9.8/32767
     return xAccl, yAccl, zAccl
 
-def get_mult_acc_data(time_interval = 6, data_spacing = 0.005):
+def get_mult_acc_data(time_interval = 6, data_spacing = 0.005, fake=False):
     x_acc = []
     y_acc = []
     z_acc = []
     for i in range(0,int(time_interval/data_spacing)):
         # repeadly get accelerometer data
-        xAccl, yAccl, zAccl = get_acc_data()
+        if fake:
+            xAccl = np.random.randint(20000) - 10000
+            yAccl = np.random.randint(20000) - 10000
+            zAccl = np.random.randint(20000) - 10000
+            #print([xAccl,yAccl,zAccl])
+        else:
+            xAccl, yAccl, zAccl = get_acc_data()
         x_acc.append(xAccl)
         y_acc.append(yAccl)
         z_acc.append(zAccl)
@@ -129,13 +135,18 @@ def preprocess_acc_data(acc_x, acc_y, acc_z):
 
 # Trains logistic regression on X_train and Y_train sets, predicts labels on X_test
 # and Y_test sets, dumps model to file and returns predicted labels
-def predict_fall(X_test):
+def predict_fall(X_test, compare_version=False):
 
     # TO-DO: existing model path is hard-coded at the moment. Make it a an argument.
     # TO-DO: No functionality of on-device training yet. Use Warm Start.
-    filename = "../pkl_model/lr_pre_6.0E+09solver_lbfgsiter_1000run_retrain.pkl"
-               #"pkl_model/lr_pre_" + prepro_param + "solver_" + str(solver) + "iter_" \
-               #+ str(max_iter) + "run_" + str(run_count) + ".pkl"
+    filename = ""
+
+    if compare_version:
+        filename = "../pkl_model/lr_pre_6.0E+09solver_lbfgsiter_1000run_10.pkl"
+    else:
+        filename = "../pkl_model/lr_pre_6.0E+09solver_lbfgsiter_1000run_retrain.pkl"
+                #"pkl_model/lr_pre_" + prepro_param + "solver_" + str(solver) + "iter_" \
+                #+ str(max_iter) + "run_" + str(run_count) + ".pkl"
     loaded_model = joblib.load(filename)
     Y_predict = loaded_model.predict(X_test)
     print(Y_predict)
@@ -144,7 +155,7 @@ def predict_fall(X_test):
 
 
 def train_fall_detection_model(X_train, Y_train):
-    model = MLPClassifier(random_state=1, max_iter=300, warm_start=True).fit(X_train, Y_train)
+    model = MLPClassifier(random_state=1, max_iter=300, warm_start=True).partial_fit(X_train, Y_train, ['1'])
 
     # uncomment to save model
     filename = "../pkl_model/lr_pre_6.0E+09solver_lbfgsiter_1000run_retrain.pkl" 
@@ -157,7 +168,7 @@ if __name__ == "__main__":
     new_Y = []
     while True:
         # repeatedly get accelerometer data. wait time.
-        x_acc, y_acc, z_acc = get_mult_acc_data(time_interval = 3, data_spacing = 0.001)
+        x_acc, y_acc, z_acc = get_mult_acc_data(time_interval = 3, data_spacing = 0.001, fake=False)
         #print(x_acc, y_acc, z_acc)
 
         # preprocess the accelerometer data, and store into list format.
@@ -167,10 +178,13 @@ if __name__ == "__main__":
         #print("len of X_train list: %s" % len(X_train))
 
         # get prediction
+        
         Y_predict = predict_fall(X_test)
+        print("Current Prediction is: " + str(Y_predict))
         new_X.append(X_test)
 
         # update model
+        # We get labeled data from the user
         # use Y_train=1 for fall, Y_train=0 for no fall. 
         if Y_predict:
             val = input("Was that a fall? (1=Yes, 0=No)")
@@ -180,9 +194,15 @@ if __name__ == "__main__":
             # train model and clear cache.
             # TO-DO: this is not good.... this is retrainig the entire model with only limited dataset from new_X and new_Y.
             #uncommenting out for now.
-            #train_fall_detection_model(X_train=X_test, Y_train=['1'])
-            new_X = []
-            new_Y = []
+            print(new_X)
+            print(len(new_X))
+
+            #TODO Add hueristic to balance data types
+            if (len(new_X) == 5):
+                train_fall_detection_model(X_train=new_X[0], Y_train=new_Y[0])
+                new_X = []
+                new_Y = []
         else:
             new_Y.append(Y_predict)
+
 
