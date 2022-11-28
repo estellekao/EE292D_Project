@@ -9,6 +9,15 @@ import time
 import numpy as np
 import joblib
 from sklearn.neural_network import MLPClassifier
+import serial
+
+serial_connected = 0
+ser = ""
+# Requires Pico to be plugged in and on
+if os.path.exists('/dev/ttyACM0') == True:
+    ser = serial.Serial('/dev/ttyACM0', 115200)
+    serial_connected = 1
+    time.sleep(1)
 
 
 def get_acc_data():
@@ -187,7 +196,29 @@ if __name__ == "__main__":
         # We get labeled data from the user
         # use Y_train=1 for fall, Y_train=0 for no fall. 
         if Y_predict:
-            val = input("Was that a fall? (1=Yes, 0=No)")
+            #val = input("Was that a fall? (1=Yes, 0=No)")
+            # Assume True positive
+            val = 1
+            
+            # New: write to Pico
+            command = "LED_ON" + "\n"
+            ser.write(bytes(command.encode('ascii')))
+            
+            # Allow user 10 seconds to label data
+            for i in range(10):
+                pico_data = ser.readline()
+                pico_data = pico_data.decode("utf-8","ignore")
+                print(pico_data[:-2])
+                if (pico_data == "FP"):
+                    val = 0
+
+                time.sleep(1)
+                
+            command = "LED_OFF" + "\n"
+            ser.write(bytes(command.encode('ascii')))
+                
+            
+            
             print(val)
             new_Y.append(Y_predict)
 
