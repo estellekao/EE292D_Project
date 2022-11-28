@@ -177,6 +177,11 @@ if __name__ == "__main__":
     new_Y = []
     while True:
         # repeatedly get accelerometer data. wait time.
+        
+    
+        command = "LED_OFF" + "\n"
+        ser.write(bytes(command.encode('ascii')))
+        
         x_acc, y_acc, z_acc = get_mult_acc_data(time_interval = 3, data_spacing = 0.001, fake=False)
         #print(x_acc, y_acc, z_acc)
 
