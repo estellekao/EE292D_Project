@@ -11,7 +11,7 @@ import joblib
 from sklearn.neural_network import MLPClassifier
 import serial
 import os
-import uselect
+#import uselect
 
 
 def read_serial_input():
@@ -175,13 +175,23 @@ def predict_fall(X_test, compare_version=False):
                 #+ str(max_iter) + "run_" + str(run_count) + ".pkl"
     loaded_model = joblib.load(filename)
     Y_predict = loaded_model.predict(X_test)
+    loaded_model.classes_ = [0,1]
     print(Y_predict)
     #print(loaded_model)
     return Y_predict
 
 
 def train_fall_detection_model(X_train, Y_train):
-    model = MLPClassifier(random_state=1, max_iter=300, warm_start=True).partial_fit(X_train, Y_train, ['1'])
+    print("retraining model")
+    print(Y_train)
+    print("type of x-train:", type(X_train))
+    print(X_train)
+    print("type of y-train:", type(Y_train))
+    print(Y_train)
+    #Y_train = Y_train.reshape(-1,1)
+    #model = MLPClassifier(random_state=1, max_iter=300, warm_start=False).partial_fit(X_train, Y_train, classes=np.array([0, 1]))
+    #model = MLPClassifier(random_state=1, max_iter=300, warm_start=False).fit(X_train, Y_train)
+    model = MLPClassifier(random_state=1, max_iter=300).partial_fit(X_train, Y_train, classes=[0,1])
 
     # uncomment to save model
     filename = "../pkl_model/lr_pre_6.0E+09solver_lbfgsiter_1000run_retrain.pkl" 
@@ -217,9 +227,11 @@ if __name__ == "__main__":
 
         # get prediction
         
-        Y_predict = predict_fall(X_test)
+        Y_predict = predict_fall(X_test)[0]
         print("Current Prediction is: " + str(Y_predict))
-        new_X.append(X_test)
+        new_X.append(X_test[0])
+
+        print(new_Y)
 
         # update model
         # We get labeled data from the user
@@ -235,33 +247,40 @@ if __name__ == "__main__":
             
 
             # Allow user 10 seconds to label data
+            stop_early = False
             for i in range(10):
-                pico_data = ser.readline()
-                pico_data = pico_data.decode("utf-8","ignore")
-                print(pico_data[:-2])
-                if (pico_data == "FP"):
-                    val = 0
-                    break
+
+                if (ser.inWaiting() > 0 and not stop_early):
+                    # read the bytes and convert from binary array to ASCII
+                    pico_data = ser.read(ser.inWaiting()).decode('ascii')
+                    #pico_data = read_serial_input() #ser.readline()
+                    #pico_data = pico_data.decode("utf-8","ignore")
+                    print(pico_data[:-2])
+                    if (pico_data == "FP"):
+                        stop_early = True
+                        val = 0
+                        break
                 time.sleep(1)
-                print("in loop")
 
             command = "LED_OFF" + "\n"
             #ser.write(bytes(command.encode('ascii')))
                 
             
             
-            print("This is val: " + val)
+            print("This is val: " + str(val))
+            print("typd of val:", type(val))
             new_Y.append(val)
 
             # train model and clear cache.
             # TO-DO: this is not good.... this is retrainig the entire model with only limited dataset from new_X and new_Y.
             #uncommenting out for now.
-            print(new_X)
+            #print(new_X)
             print(len(new_X))
-
+ 
+            print(new_Y)
             #TODO Add hueristic to balance data types
-            if (len(new_X) == 5):
-                train_fall_detection_model(X_train=new_X[0], Y_train=new_Y[0])
+            if (len(new_X) == 2):
+                train_fall_detection_model(X_train=new_X, Y_train=new_Y)
                 new_X = []
                 new_Y = []
         else:
