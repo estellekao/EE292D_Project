@@ -10,14 +10,7 @@ import numpy as np
 import joblib
 from sklearn.neural_network import MLPClassifier
 import serial
-
-serial_connected = 0
-ser = ""
-# Requires Pico to be plugged in and on
-if os.path.exists('/dev/ttyACM0') == True:
-    ser = serial.Serial('/dev/ttyACM0', 115200)
-    serial_connected = 1
-    time.sleep(1)
+import os
 
 
 def get_acc_data():
@@ -175,12 +168,19 @@ if __name__ == "__main__":
 
     new_X = []
     new_Y = []
+
+    serial_connected = 0
+    ser = ""
+    # Requires Pico to be plugged in and on
+    if os.path.exists('/dev/ttyACM0') == True:
+        ser = serial.Serial('/dev/ttyACM0', 115200)
+        serial_connected = 1
+        time.sleep(1)
+
     while True:
         # repeatedly get accelerometer data. wait time.
-        
-    
         command = "LED_OFF" + "\n"
-        ser.write(bytes(command.encode('ascii')))
+        #ser.write(bytes(command.encode('ascii')))
         
         x_acc, y_acc, z_acc = get_mult_acc_data(time_interval = 3, data_spacing = 0.001, fake=False)
         #print(x_acc, y_acc, z_acc)
@@ -209,6 +209,7 @@ if __name__ == "__main__":
             command = "LED_ON" + "\n"
             ser.write(bytes(command.encode('ascii')))
             
+
             # Allow user 10 seconds to label data
             for i in range(10):
                 pico_data = ser.readline()
@@ -216,16 +217,17 @@ if __name__ == "__main__":
                 print(pico_data[:-2])
                 if (pico_data == "FP"):
                     val = 0
-
+                    break
                 time.sleep(1)
-                
+                print("in loop")
+
             command = "LED_OFF" + "\n"
-            ser.write(bytes(command.encode('ascii')))
+            #ser.write(bytes(command.encode('ascii')))
                 
             
             
-            print(val)
-            new_Y.append(Y_predict)
+            print("This is val: " + val)
+            new_Y.append(val)
 
             # train model and clear cache.
             # TO-DO: this is not good.... this is retrainig the entire model with only limited dataset from new_X and new_Y.
