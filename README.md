@@ -1,3 +1,7 @@
+# Git usename and password:
+username: estellekao
+password: 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
+
 # Notes from Estelle
 | Steps       | Script        | Description | Input     | Output
 | :---        |    :----     |    :----  |          :---- |          :---- |
