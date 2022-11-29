@@ -11,7 +11,31 @@ import joblib
 from sklearn.neural_network import MLPClassifier
 import serial
 import os
+import uselect
 
+
+def read_serial_input():
+    """
+    Buffers serial input.
+    Writes it to input_line_this_tick when we have a full line.
+    Clears input_line_this_tick otherwise.
+    """
+    # stdin.read() is blocking which means we hang here if we use it. Instead use select to tell us if there's anything available
+    # note: select() is deprecated. Replace with Poll() to follow best practises
+    select_result = uselect.select([stdin], [], [], 0)
+    input_character = ""
+    buffered_input = []
+    while select_result[0]:
+        # there's no easy micropython way to get all the bytes.
+        # instead get the minimum there could be and keep checking with select and a while loop
+        input_character = stdin.read(1)
+        # add to the buffer
+        buffered_input.append(input_character)
+        # check if there's any input remaining to buffer
+        select_result = uselect.select([stdin], [], [], 0)
+            
+    result = ''.join(buffered_input)
+    return result
 
 def get_acc_data():
     # Get I2C bus
