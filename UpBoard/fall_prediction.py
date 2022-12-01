@@ -161,27 +161,17 @@ def preprocess_acc_data(acc_x, acc_y, acc_z):
 
 # Trains logistic regression on X_train and Y_train sets, predicts labels on X_test
 # and Y_test sets, dumps model to file and returns predicted labels
-def predict_fall(X_test, compare_version=False):
+def predict_fall(X_test, loaded_model, compare_version=False):
 
-    # TO-DO: existing model path is hard-coded at the moment. Make it a an argument.
-    # TO-DO: No functionality of on-device training yet. Use Warm Start.
-    filename = ""
-
-    if compare_version:
-        filename = "../pkl_model/lr_pre_6.0E+09solver_lbfgsiter_1000run_10.pkl"
-    else:
-        filename = "../pkl_model/lr_pre_6.0E+09solver_lbfgsiter_1000run_retrain.pkl"
-                #"pkl_model/lr_pre_" + prepro_param + "solver_" + str(solver) + "iter_" \
-                #+ str(max_iter) + "run_" + str(run_count) + ".pkl"
-    loaded_model = joblib.load(filename)
+    
     Y_predict = loaded_model.predict(X_test)
-    loaded_model.classes_ = [0,1]
+    
     print(Y_predict)
     #print(loaded_model)
     return Y_predict
 
 
-def train_fall_detection_model(X_train, Y_train):
+def train_fall_detection_model(X_train, Y_train, loaded_model):
     print("retraining model")
     print(Y_train)
     print("type of x-train:", type(X_train))
@@ -191,17 +181,48 @@ def train_fall_detection_model(X_train, Y_train):
     #Y_train = Y_train.reshape(-1,1)
     #model = MLPClassifier(random_state=1, max_iter=300, warm_start=False).partial_fit(X_train, Y_train, classes=np.array([0, 1]))
     #model = MLPClassifier(random_state=1, max_iter=300, warm_start=False).fit(X_train, Y_train)
-    model = MLPClassifier(random_state=1, max_iter=300).partial_fit(X_train, Y_train, classes=[0,1])
+    command = "TRAIN" + "\n"
+
+    for i in range(100):
+        ser.write(bytes(command.encode('ascii')))
+        time.sleep(0.1)
+
+    loaded_model.partial_fit(X_train, Y_train, loaded_model.classes_)
 
     # uncomment to save model
     filename = "../pkl_model/lr_pre_6.0E+09solver_lbfgsiter_1000run_retrain.pkl" 
-    joblib.dump(model, filename)
+    joblib.dump(loaded_model, filename)
+    print("retrain completed")
     return 
 
 if __name__ == "__main__":
 
+    #INIT
+    # TO-DO: existing model path is hard-coded at the moment. Make it a an argument.
+    # TO-DO: No functionality of on-device training yet. Use Warm Start.
+    filename = ""
+
+    if False:
+        filename = "../pkl_model/lr_pre_6.0E+09solver_lbfgsiter_1000run_10.pkl"
+    else:
+        filename = "../pkl_model/lr_pre_6.0E+09solver_lbfgsiter_1000run_retrain.pkl"
+                #"pkl_model/lr_pre_" + prepro_param + "solver_" + str(solver) + "iter_" \
+                #+ str(max_iter) + "run_" + str(run_count) + ".pkl"
+    loaded_model = joblib.load(filename)
+    loaded_model.classes_ = [0,1]
+
+    #END INIT
+
     new_X = []
     new_Y = []
+
+    new_X_FP = []
+    new_X_NP = []
+    new_Y_FP = []
+    new_Y_NP = []
+
+
+    running_fps = 0
 
     serial_connected = 0
     ser = ""
@@ -213,8 +234,11 @@ if __name__ == "__main__":
 
     while True:
         # repeatedly get accelerometer data. wait time.
-        command = "LED_OFF" + "\n"
-        #ser.write(bytes(command.encode('ascii')))
+
+        # Display an alive signal to PICO
+        command = "ALIVE" + "\n"
+        ser.write(bytes(command.encode('ascii')))
+        
         
         x_acc, y_acc, z_acc = get_mult_acc_data(time_interval = 3, data_spacing = 0.001, fake=False)
         #print(x_acc, y_acc, z_acc)
@@ -227,15 +251,20 @@ if __name__ == "__main__":
 
         # get prediction
         
-        Y_predict = predict_fall(X_test)[0]
+        Y_predict = predict_fall(X_test, loaded_model)[0]
         print("Current Prediction is: " + str(Y_predict))
+
+        
         new_X.append(X_test[0])
 
-        print(new_Y)
 
         # update model
         # We get labeled data from the user
         # use Y_train=1 for fall, Y_train=0 for no fall. 
+        val = 0
+
+        FP = False
+
         if Y_predict:
             #val = input("Was that a fall? (1=Yes, 0=No)")
             # Assume True positive
@@ -256,16 +285,14 @@ if __name__ == "__main__":
                     #pico_data = read_serial_input() #ser.readline()
                     #pico_data = pico_data.decode("utf-8","ignore")
                     print(pico_data[:-2])
-                    if (pico_data == "FP"):
+                
+                    if ("FP" in pico_data):
                         stop_early = True
+                        FP = True
                         val = 0
+                        running_fps = running_fps + 1
                         break
                 time.sleep(1)
-
-            command = "LED_OFF" + "\n"
-            #ser.write(bytes(command.encode('ascii')))
-                
-            
             
             print("This is val: " + str(val))
             print("typd of val:", type(val))
@@ -275,15 +302,47 @@ if __name__ == "__main__":
             # TO-DO: this is not good.... this is retrainig the entire model with only limited dataset from new_X and new_Y.
             #uncommenting out for now.
             #print(new_X)
-            print(len(new_X))
- 
-            print(new_Y)
-            #TODO Add hueristic to balance data types
-            if (len(new_X) == 2):
-                train_fall_detection_model(X_train=new_X, Y_train=new_Y)
-                new_X = []
-                new_Y = []
+    
+
         else:
-            new_Y.append(Y_predict)
+            new_Y.append(val)
+
+        
+        if FP:
+            new_X_FP.append(X_test[0])
+            new_Y_FP.append(val)
+            print(new_Y_FP)
+
+        else:
+            if (len(new_X_NP) == 5):
+                new_X_NP.pop(0)
+                new_X_NP.append(X_test[0])
+                new_Y_NP.pop(0)
+                new_Y_NP.append(val)
+
+                print(new_Y_NP)
+
+            else:
+                new_X_NP.append(X_test[0])
+                new_Y_NP.append(val)
+                print(new_Y_NP)
+
+
+
+        #TODO Add hueristic to balance data types
+        if (running_fps == 5):
+            print("10 FP observations made ----> starting retraining...")
+            c_X = new_X_NP + new_X_FP
+            c_Y = new_Y_NP + new_Y_FP
+            train_fall_detection_model(X_train=c_X, Y_train=c_Y, loaded_model=loaded_model)
+            new_X = []
+            new_Y = []
+            new_X_FP = []
+            new_X_NP = []
+            new_Y_FP = []
+            new_Y_NP = []
+            running_fps = 0
+
+
 
 
