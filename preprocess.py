@@ -19,38 +19,38 @@ def min_max_distance(slice):
                    + (np.square(np.argmax(slice) - np.argmin(slice))))
     
 # Calculates metrics for each dimension
-def process_slice(slice):
+def process_slice(slice, scale_MobiData):
     #print(slice)
     def slice_get(name):
         return [float(v[name]) for v in slice]
     slice_features = dict()
-    slice_features["x_min"] = int(np.amin(slice_get("acc_x"))*32767/(2*9.8))
-    slice_features["y_min"] = int(np.amin(slice_get("acc_y"))*32767/(2*9.8))
-    slice_features["z_min"] = int(np.amin(slice_get("acc_z"))*32767/(2*9.8))
+    slice_features["x_min"] = int(np.amin(slice_get("acc_x"))*scale_MobiData)
+    slice_features["y_min"] = int(np.amin(slice_get("acc_y"))*scale_MobiData)
+    slice_features["z_min"] = int(np.amin(slice_get("acc_z"))*scale_MobiData)
     
-    slice_features["x_max"] = int(np.amax(slice_get("acc_x"))*32767/(2*9.8))
-    slice_features["y_max"] = int(np.amax(slice_get("acc_y"))*32767/(2*9.8))
-    slice_features["z_max"] = int(np.amax(slice_get("acc_z"))*32767/(2*9.8))
+    slice_features["x_max"] = int(np.amax(slice_get("acc_x"))*scale_MobiData)
+    slice_features["y_max"] = int(np.amax(slice_get("acc_y"))*scale_MobiData)
+    slice_features["z_max"] = int(np.amax(slice_get("acc_z"))*scale_MobiData)
     
-    slice_features["x_std"] = int(np.std(slice_get("acc_x"))*32767/(2*9.8))
-    slice_features["y_std"] = int(np.std(slice_get("acc_y"))*32767/(2*9.8))
-    slice_features["z_std"] = int(np.std(slice_get("acc_z"))*32767/(2*9.8))
+    slice_features["x_std"] = int(np.std(slice_get("acc_x"))*scale_MobiData)
+    slice_features["y_std"] = int(np.std(slice_get("acc_y"))*scale_MobiData)
+    slice_features["z_std"] = int(np.std(slice_get("acc_z"))*scale_MobiData)
     
-    slice_features["x_mean"] = int(np.mean(slice_get("acc_x"))*32767/(2*9.8))
-    slice_features["y_mean"] = int(np.mean(slice_get("acc_y"))*32767/(2*9.8))
-    slice_features["z_mean"] = int(np.mean(slice_get("acc_z"))*32767/(2*9.8))
+    slice_features["x_mean"] = int(np.mean(slice_get("acc_x"))*scale_MobiData)
+    slice_features["y_mean"] = int(np.mean(slice_get("acc_y"))*scale_MobiData)
+    slice_features["z_mean"] = int(np.mean(slice_get("acc_z"))*scale_MobiData)
 
-    slice_features["x_slope"] = int(np.mean(np.diff(slice_get("acc_x"))*32767/(2*9.8)))
-    slice_features["y_slope"] = int(np.mean(np.diff(slice_get("acc_y"))*32767/(2*9.8)))
-    slice_features["z_slope"] = int(np.mean(np.diff(slice_get("acc_z"))*32767/(2*9.8)))
+    slice_features["x_slope"] = int(np.mean(np.diff(slice_get("acc_x"))*scale_MobiData))
+    slice_features["y_slope"] = int(np.mean(np.diff(slice_get("acc_y"))*scale_MobiData))
+    slice_features["z_slope"] = int(np.mean(np.diff(slice_get("acc_z"))*scale_MobiData))
 
-    slice_features["x_zc"] = int(zero_crossings(slice_get("acc_x"))*32767/(2*9.8))
-    slice_features["y_zc"] = int(zero_crossings(slice_get("acc_y"))*32767/(2*9.8))
-    slice_features["z_zc"] = int(zero_crossings(slice_get("acc_z"))*32767/(2*9.8))
+    slice_features["x_zc"] = int(zero_crossings(slice_get("acc_x"))*scale_MobiData)
+    slice_features["y_zc"] = int(zero_crossings(slice_get("acc_y"))*scale_MobiData)
+    slice_features["z_zc"] = int(zero_crossings(slice_get("acc_z"))*scale_MobiData)
 
-    slice_features["x_mmd"] = int(min_max_distance(slice_get("acc_x"))*32767/(2*9.8))
-    slice_features["y_mmd"] = int(min_max_distance(slice_get("acc_y"))*32767/(2*9.8))
-    slice_features["z_mmd"] = int(min_max_distance(slice_get("acc_z"))*32767/(2*9.8))
+    slice_features["x_mmd"] = int(min_max_distance(slice_get("acc_x"))*scale_MobiData)
+    slice_features["y_mmd"] = int(min_max_distance(slice_get("acc_y"))*scale_MobiData)
+    slice_features["z_mmd"] = int(min_max_distance(slice_get("acc_z"))*scale_MobiData)
 
     # label each timeslice with the label of the majority class unless it is a fall
     #falls = FALL_LABELS.intersection(set([v["label"] for v in slice]))
@@ -65,7 +65,7 @@ def process_slice(slice):
     return slice_features
 
 # Preprocesses one file for a given slice_size (nanoseconds)
-def process_file(file_name, slice_size):
+def process_file(file_name, slice_size, scale_MobiData):
     try:
         #data = np.genfromtxt(file_name, dtype=None, delimiter=',', names=True)
         with open(file_name, "r") as csv_file:
@@ -83,13 +83,13 @@ def process_file(file_name, slice_size):
                 # otherwise consider slice complete and process
                 else:
                     cur_slice.reverse()
-                    feature_list.insert(0, process_slice(cur_slice))
+                    feature_list.insert(0, process_slice(cur_slice, scale_MobiData))
                     cur_slice = list([d])
                     snum = snum + 1
             else:
                 if cur_slice:
                     cur_slice.reverse()
-                    feature_list.insert(0, process_slice(cur_slice))
+                    feature_list.insert(0, process_slice(cur_slice, scale_MobiData))
                     cur_slice = list()
                     snum = snum + 1
             feature_list.reverse()
@@ -100,12 +100,12 @@ def process_file(file_name, slice_size):
         return False
 
 # Preprocesses the dataset directory for a given slice_size (nanoseconds)
-def process_directory(slice_size, mobiact_folder):
+def process_directory(slice_size, mobiact_folder, scale_MobiData):
     data = dict(slice_size=slice_size)
     print(data)
     for file in glob.glob(mobiact_folder + "*/*_annotated.csv", recursive=True):
         print(file)
-        data[file] = process_file(file, slice_size)
+        data[file] = process_file(file, slice_size, scale_MobiData)
     return data
 
 def write_to_json(data):
@@ -114,15 +114,16 @@ def write_to_json(data):
 
 
 # main function to enable running in terminal
-def main(slice_size, mobiact_folder):
-    
+def main(slice_size, mobiact_folder, scale_MobiData):
     print("Processing Directory")
-    data = process_directory(slice_size, mobiact_folder)
+    data = process_directory(slice_size, mobiact_folder, scale_MobiData)
     print(data)
     print("Writing File")
     write_to_json(data)
 
 if __name__ == "__main__":
     ss =  6e9 #5.0e9 #2.5e9 #1e9 #sys.argv[1]; # Preprocesses the dataset directory for a given slice_size (nanoseconds)
-    mobiact_folder = "/home/ubuntu/Documents/MobiAct_Dataset_v2.0/" 
-    main(ss, mobiact_folder)
+    mobiact_folder = "/home/ubuntu/Documents/MobiAct_Dataset_v2.0/Annotated_Data/"
+    scale_MobiData = 0 # if 0: use raw data (scale_const=1) . if 1: scale by 32767/(2*9.8)
+    scale_const = 32767/(2*9.8) if scale_MobiData else 1
+    main(ss, mobiact_folder, scale_const)
