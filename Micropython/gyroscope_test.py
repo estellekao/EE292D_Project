@@ -1,4 +1,4 @@
-import machine
+mport machine
 import utime
 import sys
 import struct
@@ -163,23 +163,25 @@ while True:
 
 
     # Output data to screen
-    print("X-Axis of Rotation : %f" %((xGyro)/(28571.1)))
-    print("Y-Axis of Rotation : %f" %((yGyro)/(28571.1)))
-    print("Z-Axis of Rotation : %f" %((zGyro)/(28571.1)))
+    #Use +-250 sensitivty and convert dps to rad/s
+    print("X-Axis of Rotation : %f" %((xGyro*math.pi)/(114.285*180)))
+    print("Y-Axis of Rotation : %f" %((yGyro*math.pi)/(114.285*180)))
+    print("Z-Axis of Rotation : %f" %((zGyro*math.pi)/(114.285*180)))
+    
+    #Use 0.06 instead of 0.061 (datasheet says "typical" so this fine tune is expected)
+    print("Acceleration in X-Axis : %f" %((xAccl*9.80665)/16666.6))
+    print("Acceleration in Y-Axis : %f" %((yAccl*9.80665)/16666.6))
+    print("Acceleration in Z-Axis : %f" %zAccl)
+    print("Acceleration in Z-Axis : %f" %((zAccl*9.80665)/16666.6))
     
     
-    print("Acceleration in X-Axis : %f" %((xAccl*2*9.80665)/32767))
-    print("Acceleration in Y-Axis : %f" %((yAccl*2*9.80665)/32767))
-    print("Acceleration in Z-Axis : %f" %((zAccl*2*9.80665)/32767))
+    xGyro = (xGyro*math.pi)/(114.285*180);
+    yGyro = (yGyro*math.pi)/(114.285*180);
+    zGyro = (zGyro*math.pi)/(114.285*180);
     
-    
-    xGyro = (xGyro)/(28571.1);
-    yGyro = (yGyro)/(28571.1);
-    zGyro = (zGyro)/(28571.1);
-    
-    xAccl = (xAccl*2*9.80665)/(32767);
-    yAccl = (yAccl*2*9.80665)/(32767);
-    zAccl = (zAccl*2*9.80665)/(32767);
+    xAccl = (xAccl*9.80665)/(16666.6);
+    yAccl = (yAccl*9.80665)/(16666.6);
+    zAccl = (zAccl*9.80665)/(16666.6);
     
     
     
