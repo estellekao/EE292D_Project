@@ -15,6 +15,15 @@ Demo of I2C connection:
 
 Reference: UpBoard DataSheet: https://up-board.org/wp-content/uploads/datasheets/UPDatasheetV8.5.pdf
 
+
+To enable user to I2C port:
+```
+ubuntu@ubuntu-UP-CHT01:~$ sudo add-apt-repository ppa:up-division/5.4-upboard
+ubuntu@ubuntu-UP-CHT01:~/Documents/EE292D_Project$ sudo apt update
+ubuntu@ubuntu-UP-CHT01:~/Documents/EE292D_Project/UpBoard$ ./up_extras_setup.sh
+```
+./up_extras_setup.sh is created based on reference: Section "Enable the HAT functionality from userspace" on [UpBoard Wiki](https://github.com/up-board/up-community/wiki/Ubuntu_18.04)
+
 ```
 ubuntu@ubuntu-UP-CHT01:~$ i2cdetect -y -r 1
      0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f
