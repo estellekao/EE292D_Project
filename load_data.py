@@ -4,9 +4,9 @@ from collections import Counter
 
 FALL_LABELS = set([b'FOL', b'FKL', b'BSC', b'SDL'])
 
-KEY_LIST = ["x_min", "y_min", "z_min", "x_max", "y_max", "z_max", "x_std", "y_std","z_std"
+KEY_LIST = ["gyro_x_min", "gyro_y_min", "gyro_z_min", "gyro_x_max", "gyro_y_max", "gyro_z_max", "x_min", "y_min", "z_min", "x_max", "y_max", "z_max", "x_std", "y_std","z_std"
             , "x_mean", "y_mean", "z_mean", "x_slope", "y_slope", "z_slope", "x_zc"
-            , "y_zc", "z_zc", "x_mmd", "y_mmd", "z_mmd"]                         
+            , "y_zc", "z_zc", "x_mmd", "y_mmd", "z_mmd", "pitch_slope", "roll_slope"]                         
 
 #splits a list into length n chunks
 def chunks(lst, n):
@@ -75,5 +75,7 @@ def validation_cases(dataset):
             X_train.extend(r_x)
             Y_train.extend(r_y)
         yield ((X_train, Y_train), (X_test, Y_test))
+
+            
 
             
