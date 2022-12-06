@@ -29,7 +29,8 @@ def run_one_LR(X_train, Y_train, X_test, Y_test, prepro_param, rand_seed=None
         return Y_predict
         
     else:
-        model = MLPClassifier(random_state=1, max_iter=300).fit(X_train, Y_train)
+        # 3 layers, 150 nodes, 100 nodes, 50 nodes
+        model = MLPClassifier(random_state=1, max_iter=300, hidden_layer_sizes=(150,100,50)).fit(X_train, Y_train)
         
         #model = LogisticRegression(random_state=rand_seed, solver=solver, max_iter=max_iter
         #                           , multi_class=multi_class, n_jobs=n_jobs)
