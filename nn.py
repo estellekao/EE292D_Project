@@ -1,3 +1,6 @@
+# Adapated from previous repos logistic regression implementation
+# Modifications made by Estelle Kao and Chris Calloway
+
 import load_data
 import preprocess
 import util
