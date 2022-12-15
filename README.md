@@ -22,3 +22,5 @@ Addition set up instructions are descrbied in [UpBoard/README.md](https://github
 
 ## Reference on MobiAct dataset
 [1] Chatzaki C., Pediaditis M., Vavoulas G., Tsiknakis M. (2017) Human Daily Activity and Fall Recognition Using a Smartphone’s Acceleration Sensor. In: Rocker C., O’Donoghue J., Ziefle M., Helfert M., Molloy W. (eds) Information and Communication Technologies for Ageing Well and e-Health. ICT4AWE 2016. Communications in Computer and Information Science, vol 736, pp 100-118. Springer, Cham, DOI 10.1007/978-3-319-62704-5_7.
+
+[2] Shizume, T., &amp; Salem, W. (n.d.). TTSHIZ/CS539_FALL_PREDICTION. GitHub. Retrieved December 14, 2022, from https://github.com/ttshiz/CS539_Fall_Prediction 
