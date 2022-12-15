@@ -1,3 +1,6 @@
+# Legacy code from the repo to allow ease of reading in MobiAct dataset
+
+
 import load_data
 import numpy as np
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
