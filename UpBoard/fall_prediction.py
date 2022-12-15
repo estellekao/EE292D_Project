@@ -1,8 +1,6 @@
-# Distributed with a free-will license.
-# Use it any way you want, profit or free, provided it fits in the licenses of its associated works.
-# LSM330
-# This code is designed to work with the LSM330_I2CS I2C Mini Module available from ControlEverything.com.
-# https://www.controleverything.com/content/Accelorometer?sku=LSM330_I2CS#tabs-0-product_tabset-2
+# Authors: Chris Calloway, Estelle Kao
+# For Academic use only
+# LSM330DLC code taken from vendor under free-will liscense 
 
 import smbus
 import time
@@ -12,9 +10,49 @@ from sklearn.neural_network import MLPClassifier
 import serial
 import os
 import math
+import pickle
 #import uselect
 
 
+def init_variety_features():
+
+    observed_labels_file = open("/home/ubuntu/Documents/EE292D_Project/feature_variation.pkl", "rb")
+    dataset_features = pickle.load(observed_labels_file)
+
+    return dataset_features
+
+
+def compute_simlarity(dataset_features, current_queue ):
+
+    total_similiarity = 0
+    min_similiarity = 10000000
+
+    for i in current_queue:
+        #data_array_temp = [i['gyro_x_min'], i['gyro_y_min'], i['gyro_z_min'],i['gyro_x_max'],i['gyro_y_max'],i['gyro_z_max'],i['x_min'],i['y_min'],i['z_min'],i['x_max'],i['y_max'],i['z_max'],i['x_std'],i['y_std'],i['z_std'],i['x_mean'],i['y_mean'],i['z_mean'],i['x_slope'],i['y_slope'],i['z_slope'],i['x_zc'],i['y_zc'],i['z_zc'],i['x_mmd'],i['y_mmd'],i['z_mmd'], i['pitch_slope'], i['roll_slope']]
+          
+        A = np.array(i)
+        # A = np.array()
+        A_norm  = np.linalg.norm(A)
+        min_similiarity = 10000000
+        for j in dataset_features:
+
+            data_array = [j['gyro_x_min'], j['gyro_y_min'], j['gyro_z_min'],j['gyro_x_max'],j['gyro_y_max'],j['gyro_z_max'],j['x_min'],j['y_min'],j['z_min'],j['x_max'],j['y_max'],j['z_max'],j['x_std'],j['y_std'],j['z_std'],j['x_mean'],j['y_mean'],j['z_mean'],j['x_slope'],j['y_slope'],j['z_slope'],j['x_zc'],j['y_zc'],j['z_zc'],j['x_mmd'],j['y_mmd'],j['z_mmd'], j['pitch_slope'], j['roll_slope']]
+          
+            B = np.array(data_array)
+            A_dot_B = np.dot(A,B)
+            B_norm  = np.linalg.norm(B)
+
+            cosine_sim = A_dot_B / (A_norm * B_norm)
+            
+            
+            if (cosine_sim < min_similiarity):
+                min_similiarity = cosine_sim
+
+        total_similiarity += min_similiarity
+
+
+
+    return total_similiarity
 
 
 def read_serial_input():
@@ -398,6 +436,7 @@ if __name__ == "__main__":
     # TO-DO: existing model path is hard-coded at the moment. Make it a an argument.
     # TO-DO: No functionality of on-device training yet. Use Warm Start.
     filename = ""
+    vanilla_filename = "../pkl_model/lr_pre_6.0E+09solver_lbfgsiter_1000run_vanilla.pkl"
 
     if False:
         filename = "../pkl_model/lr_pre_6.0E+09solver_lbfgsiter_1000run_10.pkl"
@@ -405,8 +444,14 @@ if __name__ == "__main__":
         filename = "../pkl_model/lr_pre_6.0E+09solver_lbfgsiter_1000run_retrain.pkl"
                 #"pkl_model/lr_pre_" + prepro_param + "solver_" + str(solver) + "iter_" \
                 #+ str(max_iter) + "run_" + str(run_count) + ".pkl"
+
+    vanilla_loaded_model = joblib.load(vanilla_filename)
+    vanilla_loaded_model.classes_ = [0,1]
+
     loaded_model = joblib.load(filename)
     loaded_model.classes_ = [0,1]
+
+    dataset_features = init_variety_features()
 
     #END INIT
 
@@ -452,9 +497,35 @@ if __name__ == "__main__":
         #print("len of X_train list: %s" % len(X_train))
 
         # get prediction
+        Y_vanilla_predict = predict_fall(X_test, vanilla_loaded_model)[0]
+
+        
         
         Y_predict = predict_fall(X_test, loaded_model)[0]
+
+
+        overrule = 0
+        if (ser.inWaiting() > 0):
+                    # read the bytes and convert from binary array to ASCII
+                    pico_data = ser.read(ser.inWaiting()).decode('ascii')
+                    #pico_data = read_serial_input() #ser.readline()
+                    #pico_data = pico_data.decode("utf-8","ignore")
+                    print(pico_data[:-2])
+                
+                    if ("FN" in pico_data):
+                        print("Self labeled fall!")
+                        Y_predict = 1
+                        overrule = 1
+
+
         print("Current Prediction is: " + str(Y_predict))
+        print("Vanilla Prediction is: " + str(Y_vanilla_predict))
+
+        if Y_vanilla_predict:
+            command = "VANILLA" + "\n"
+            ser.write(bytes(command.encode('ascii')))
+            time.sleep(3)
+
 
         
         new_X.append(X_test[0])
@@ -492,7 +563,7 @@ if __name__ == "__main__":
                         stop_early = True
                         FP = True
                         val = 0
-                        running_fps = running_fps + 1
+                        
                         break
                 time.sleep(1)
             
@@ -510,7 +581,8 @@ if __name__ == "__main__":
             new_Y.append(val)
 
         
-        if FP:
+        if FP or overrule:
+            running_fps = running_fps + 1
             new_X_FP.append(X_test[0])
             new_Y_FP.append(val)
             print(new_Y_FP)
@@ -521,6 +593,10 @@ if __name__ == "__main__":
                 new_X_NP.append(X_test[0])
                 new_Y_NP.pop(0)
                 new_Y_NP.append(val)
+                
+                print("THIS IS IS SIMLARITY")
+                print(sim)
+                print("!!!!!!!!!!!!!!!!!!!!!")
 
                 print(new_Y_NP)
 
@@ -530,10 +606,13 @@ if __name__ == "__main__":
                 print(new_Y_NP)
 
 
+        c_X = new_X_NP + new_X_FP
+        sim = compute_simlarity(dataset_features, c_X )
 
+        sim_hyper_param = 5.5
         #TODO Add hueristic to balance data types
-        if (running_fps == 5):
-            print("10 FP observations made ----> starting retraining...")
+        if (running_fps == 5  ):
+            print("Retrain activated")
             c_X = new_X_NP + new_X_FP
             c_Y = new_Y_NP + new_Y_FP
             train_fall_detection_model(X_train=c_X, Y_train=c_Y, loaded_model=loaded_model)
@@ -544,6 +623,8 @@ if __name__ == "__main__":
             new_Y_FP = []
             new_Y_NP = []
             running_fps = 0
+
+
 
 
 
